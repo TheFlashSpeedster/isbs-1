@@ -11,7 +11,13 @@ const basePrices = {
   Electrician: 399,
   Cooking: 249,
   Plumber: 349,
-  Misc: 299
+  Misc: 299,
+  Cleaning: 249,
+  Repair: 399,
+  Painting: 349,
+  Shifting: 499,
+  Plumbing: 349,
+  Electric: 399
 };
 
 function buildBookingId() {
@@ -93,45 +99,118 @@ function toBookingPayload(booking) {
   };
 }
 
+// Find nearby providers endpoint
+router.post("/nearby-providers", async (req, res) => {
+  try {
+    const { serviceType, userLocation } = req.body;
+    
+    if (!serviceType) {
+      return res.status(400).json({ message: "serviceType is required" });
+    }
+
+    const location = userLocation || { latitude: 28.6139, longitude: 77.209 };
+    const providers = await Provider.find({ serviceType, availability: true })
+      .populate("user", "name phone")
+      .lean();
+
+    if (!providers.length) {
+      return res.status(404).json({ 
+        message: "No providers available for this service",
+        providers: [] 
+      });
+    }
+
+    const nearbyProviders = providers
+      .map((provider) => {
+        const distanceKm = haversineDistanceKm(location, provider.location);
+        const { etaMinutes } = computeEta(distanceKm, false);
+        
+        return {
+          id: provider._id,
+          name: provider.name,
+          serviceType: provider.serviceType,
+          rating: provider.rating,
+          imageUrl: provider.imageUrl,
+          location: provider.location,
+          distanceKm: Number(distanceKm.toFixed(2)),
+          etaMinutes,
+          availability: provider.availability
+        };
+      })
+      .sort((a, b) => a.distanceKm - b.distanceKm)
+      .slice(0, 10); // Return top 10 nearest providers
+
+    return res.json({
+      providers: nearbyProviders,
+      count: nearbyProviders.length,
+      userLocation: location
+    });
+  } catch (err) {
+    console.error("Error finding nearby providers:", err);
+    return res.status(500).json({ message: "Failed to find nearby providers" });
+  }
+});
+
 router.post("/book", async (req, res) => {
   try {
     if (req.user.role === "PROVIDER") {
       return res.status(403).json({ message: "Providers cannot create customer bookings" });
     }
 
-    const { serviceType, userLocation, isEmergency, paymentMethod } = req.body;
+    const { serviceType, userLocation, isEmergency, paymentMethod, preferredProviderId } = req.body;
     if (!serviceType) {
       return res.status(400).json({ message: "serviceType is required" });
     }
 
     const location = userLocation || { latitude: 28.6139, longitude: 77.209 };
-    const providers = await Provider.find({ serviceType, availability: true }).lean();
-
-    if (!providers.length) {
-      return res.status(404).json({ message: "No providers available" });
-    }
-
-    const ranked = providers
-      .map((provider) => ({
-        provider,
-        distanceKm: haversineDistanceKm(location, provider.location)
-      }))
-      .sort((a, b) => a.distanceKm - b.distanceKm);
-
+    
     let assigned = null;
     let distanceKm = 0;
 
-    for (const candidate of ranked) {
-      const updated = await Provider.findOneAndUpdate(
-        { _id: candidate.provider._id, availability: true },
+    // If customer selected a specific provider, try to assign them
+    if (preferredProviderId) {
+      const preferredProvider = await Provider.findOneAndUpdate(
+        { _id: preferredProviderId, serviceType, availability: true },
         { availability: false },
         { new: true }
       );
 
-      if (updated) {
-        assigned = updated;
-        distanceKm = Number(candidate.distanceKm.toFixed(2));
-        break;
+      if (preferredProvider) {
+        assigned = preferredProvider;
+        distanceKm = Number(haversineDistanceKm(location, preferredProvider.location).toFixed(2));
+      } else {
+        // Preferred provider not available, fall back to auto-assign
+        console.log("Preferred provider not available, falling back to auto-assign");
+      }
+    }
+
+    // If no provider assigned yet (either no preference or preferred was unavailable), auto-assign nearest
+    if (!assigned) {
+      const providers = await Provider.find({ serviceType, availability: true }).lean();
+
+      if (!providers.length) {
+        return res.status(404).json({ message: "No providers available" });
+      }
+
+      const ranked = providers
+        .map((provider) => ({
+          provider,
+          distanceKm: haversineDistanceKm(location, provider.location)
+        }))
+        .sort((a, b) => a.distanceKm - b.distanceKm);
+
+      for (const candidate of ranked) {
+        const updated = await Provider.findOneAndUpdate(
+          { _id: candidate.provider._id, availability: true },
+          { availability: false },
+          { new: true }
+        );
+
+        if (updated) {
+          assigned = updated;
+          distanceKm = Number(candidate.distanceKm.toFixed(2));
+          break;
+        }
       }
     }
 
@@ -153,6 +232,7 @@ router.post("/book", async (req, res) => {
       etaMinutes,
       distanceKm,
       price,
+      userLocation: location,
       isEmergency: Boolean(isEmergency),
       paymentMethod: paymentMethod || "Cash"
     });
@@ -191,6 +271,7 @@ router.post("/book", async (req, res) => {
       }
     });
   } catch (err) {
+    console.error("Booking error:", err);
     return res.status(500).json({ message: "Booking failed" });
   }
 });
@@ -209,14 +290,18 @@ router.get("/booking/:id", async (req, res) => {
             id: booking.provider._id,
             name: booking.provider.name,
             rating: booking.provider.rating,
-            imageUrl: booking.provider.imageUrl
+            imageUrl: booking.provider.imageUrl,
+            location: booking.provider.location
           }
         : null,
       customer: booking.user
         ? {
             id: booking.user._id,
             name: booking.user.name,
-            phone: booking.user.phone
+            phone: booking.user.phone,
+            location: booking.userLocation || (booking.user.latitude && booking.user.longitude
+              ? { latitude: booking.user.latitude, longitude: booking.user.longitude }
+              : null)
           }
         : null
     });

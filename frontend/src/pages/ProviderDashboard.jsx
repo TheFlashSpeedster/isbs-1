@@ -160,27 +160,27 @@ export default function ProviderDashboard() {
   };
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen bg-gray-50">
       <Navbar />
       <div className="mx-auto max-w-6xl px-4 py-12">
         <div className="grid gap-8 lg:grid-cols-[1.1fr_0.9fr]">
           <div className="space-y-6">
-            <div className="glass-panel rounded-3xl p-6 shadow-card">
-              <h2 className="text-2xl font-display font-bold text-white">🛠 Provider Command Center</h2>
-              <p className="mt-2 text-sm text-slate-400">
+            <div className="rounded-2xl bg-white p-6 shadow-md border border-gray-200">
+              <h2 className="text-2xl font-bold text-gray-900">🛠 Provider Command Center</h2>
+              <p className="mt-2 text-sm text-gray-600">
                 Live jobs, customer chats, and real-time updates.
               </p>
-              <div className="mt-6 flex items-center justify-between rounded-2xl bg-white/5 p-4">
+              <div className="mt-6 flex items-center justify-between rounded-lg bg-purple-50 p-4 border border-purple-200">
                 <div>
-                  <div className="text-sm text-slate-400">Availability</div>
-                  <div className="text-lg font-semibold text-white">
+                  <div className="text-sm text-gray-600">Availability</div>
+                  <div className="text-lg font-semibold text-gray-900">
                     {available ? "Accepting new jobs" : "Paused"}
                   </div>
                 </div>
                 <button
                   onClick={handleToggleAvailability}
-                  className={`rounded-full px-4 py-2 text-sm font-semibold ${
-                    available ? "bg-accent-500 text-white" : "bg-white/10 text-slate-200"
+                  className={`rounded-lg px-4 py-2 text-sm font-semibold transition-colors ${
+                    available ? "bg-green-600 text-white hover:bg-green-700" : "bg-gray-300 text-gray-700 hover:bg-gray-400"
                   }`}
                 >
                   {available ? "Go Offline" : "Go Online"}
@@ -188,12 +188,12 @@ export default function ProviderDashboard() {
               </div>
             </div>
 
-            <div className="glass-panel rounded-3xl p-6 shadow-card">
-              <h3 className="text-lg font-semibold text-white">📦 Assigned Jobs</h3>
-              {status ? <p className="mt-3 text-xs text-red-200">{status}</p> : null}
+            <div className="rounded-2xl bg-white p-6 shadow-md border border-gray-200">
+              <h3 className="text-lg font-semibold text-gray-900">📦 Assigned Jobs</h3>
+              {status ? <p className="mt-3 text-xs text-red-600">{status}</p> : null}
               <div className="mt-4 space-y-3">
                 {assignments.length === 0 ? (
-                  <div className="rounded-2xl bg-white/5 p-4 text-sm text-slate-400">
+                  <div className="rounded-lg bg-gray-50 p-4 text-sm text-gray-600 border border-gray-200">
                     No active assignments yet.
                   </div>
                 ) : (
@@ -202,20 +202,20 @@ export default function ProviderDashboard() {
                       type="button"
                       key={job.bookingId}
                       onClick={() => setSelectedId(job.bookingId)}
-                      className={`w-full rounded-2xl bg-white/5 p-4 text-left transition ${
-                        selectedId === job.bookingId ? "ring-2 ring-primary-500" : ""
+                      className={`w-full rounded-lg bg-gray-50 p-4 text-left transition border ${
+                        selectedId === job.bookingId ? "ring-2 ring-purple-500 border-purple-300 bg-purple-50" : "border-gray-200 hover:bg-gray-100"
                       }`}
                     >
                       <div className="flex items-center justify-between">
                         <div>
-                          <div className="text-sm text-slate-400">{job.serviceType}</div>
-                          <div className="text-sm font-semibold text-white">{job.bookingId}</div>
+                          <div className="text-sm text-gray-600">{job.serviceType}</div>
+                          <div className="text-sm font-semibold text-gray-900">{job.bookingId}</div>
                         </div>
-                        <span className="rounded-full bg-primary-500/20 px-3 py-1 text-xs text-primary-200">
+                        <span className="rounded-full bg-purple-100 px-3 py-1 text-xs text-purple-700 font-medium">
                           {job.status}
                         </span>
                       </div>
-                      <div className="mt-2 text-xs text-slate-400">
+                      <div className="mt-2 text-xs text-gray-500">
                         Customer: {job.customer?.name || "-"} | ETA: {formatEta(job)}
                       </div>
                     </button>
@@ -226,22 +226,22 @@ export default function ProviderDashboard() {
           </div>
 
           <div className="space-y-6">
-            <div className="glass-panel rounded-3xl p-6 shadow-card">
-              <h3 className="text-lg font-semibold text-white">💬 Live Chat</h3>
+            <div className="rounded-2xl bg-white p-6 shadow-md border border-gray-200">
+              <h3 className="text-lg font-semibold text-gray-900">💬 Live Chat</h3>
               {selectedBooking ? (
-                <p className="mt-2 text-xs text-slate-400">
+                <p className="mt-2 text-xs text-gray-600">
                   Chatting with {selectedBooking.customer?.name || "Customer"}
                 </p>
               ) : null}
-              <div className="mt-4 space-y-3">
+              <div className="mt-4 space-y-3 max-h-64 overflow-y-auto">
                 {messages.length === 0 ? (
-                  <div className="rounded-2xl bg-white/5 p-3 text-sm text-slate-400">
+                  <div className="rounded-lg bg-gray-50 p-3 text-sm text-gray-600 border border-gray-200">
                     No messages yet.
                   </div>
                 ) : (
                   messages.map((message, idx) => (
-                    <div key={idx} className="rounded-2xl bg-white/5 p-3 text-sm text-slate-200">
-                      <span className="font-semibold text-primary-200">
+                    <div key={idx} className="rounded-lg bg-gray-50 p-3 text-sm text-gray-700 border border-gray-200">
+                      <span className="font-semibold text-purple-600">
                         {message.senderRole === "PROVIDER" ? "You" : message.senderName || "Customer"}:
                       </span>{" "}
                       {message.text}
@@ -255,28 +255,28 @@ export default function ProviderDashboard() {
                   value={messageInput}
                   onChange={(event) => setMessageInput(event.target.value)}
                   placeholder="Type a message"
-                  className="flex-1 rounded-2xl border border-white/10 bg-white/5 px-4 py-2 text-sm text-white placeholder:text-slate-500"
+                  className="flex-1 rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm text-gray-900 placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                 />
                 <button
                   type="submit"
-                  className="rounded-full bg-primary-500 px-4 py-2 text-sm font-semibold text-white"
+                  className="rounded-lg bg-purple-600 px-4 py-2 text-sm font-semibold text-white hover:bg-purple-700"
                 >
                   Send
                 </button>
               </form>
               {selectedBooking ? (
-                <div className="mt-4 space-y-3 rounded-2xl border border-white/10 p-3">
-                  <div className="text-sm font-semibold text-white">⚡ Quick Actions</div>
+                <div className="mt-4 space-y-3 rounded-lg border border-gray-200 bg-gray-50 p-3">
+                  <div className="text-sm font-semibold text-gray-900">⚡ Quick Actions</div>
                   <div className="grid grid-cols-2 gap-2">
                     <button
                       onClick={() => runAction("ACCEPT")}
-                      className="rounded-full bg-accent-500 px-3 py-1 text-xs font-semibold text-white"
+                      className="rounded-lg bg-green-600 px-3 py-2 text-xs font-semibold text-white hover:bg-green-700"
                     >
                       Accept
                     </button>
                     <button
                       onClick={() => runAction("REJECT")}
-                      className="rounded-full bg-emergency px-3 py-1 text-xs font-semibold text-white"
+                      className="rounded-lg bg-red-600 px-3 py-2 text-xs font-semibold text-white hover:bg-red-700"
                     >
                       Reject
                     </button>
@@ -286,18 +286,18 @@ export default function ProviderDashboard() {
                     value={actionForm.note}
                     onChange={(event) => setActionForm((prev) => ({ ...prev, note: event.target.value }))}
                     placeholder="Delivery update note"
-                    className="w-full rounded-2xl border border-white/10 bg-white/5 px-3 py-2 text-xs text-white placeholder:text-slate-500"
+                    className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-xs text-gray-900 placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                   />
                   <input
                     type="number"
                     value={actionForm.etaMinutes}
                     onChange={(event) => setActionForm((prev) => ({ ...prev, etaMinutes: event.target.value }))}
                     placeholder="Updated ETA in minutes"
-                    className="w-full rounded-2xl border border-white/10 bg-white/5 px-3 py-2 text-xs text-white placeholder:text-slate-500"
+                    className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-xs text-gray-900 placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                   />
                   <button
                     onClick={() => runAction("UPDATE")}
-                    className="w-full rounded-full bg-primary-500 py-2 text-xs font-semibold text-white"
+                    className="w-full rounded-lg bg-purple-600 py-2 text-xs font-semibold text-white hover:bg-purple-700"
                   >
                     Update Delivery Info
                   </button>
@@ -305,20 +305,20 @@ export default function ProviderDashboard() {
               ) : null}
             </div>
 
-            <div className="glass-panel rounded-3xl p-6 shadow-card">
-              <h3 className="text-lg font-semibold text-white">📊 Today Summary</h3>
+            <div className="rounded-2xl bg-white p-6 shadow-md border border-gray-200">
+              <h3 className="text-lg font-semibold text-gray-900">📊 Today Summary</h3>
               <div className="mt-4 grid gap-4">
-                <div className="rounded-2xl bg-white/5 p-4">
-                  <div className="text-xs uppercase text-slate-400">Completed</div>
-                  <div className="mt-2 text-lg font-semibold text-white">{completedCount}</div>
+                <div className="rounded-lg bg-blue-50 p-4 border border-blue-200">
+                  <div className="text-xs uppercase text-gray-600 font-semibold">Completed</div>
+                  <div className="mt-2 text-2xl font-bold text-gray-900">{completedCount}</div>
                 </div>
-                <div className="rounded-2xl bg-white/5 p-4">
-                  <div className="text-xs uppercase text-slate-400">Active</div>
-                  <div className="mt-2 text-lg font-semibold text-white">{activeCount}</div>
+                <div className="rounded-lg bg-green-50 p-4 border border-green-200">
+                  <div className="text-xs uppercase text-gray-600 font-semibold">Active</div>
+                  <div className="mt-2 text-2xl font-bold text-gray-900">{activeCount}</div>
                 </div>
-                <div className="rounded-2xl bg-white/5 p-4">
-                  <div className="text-xs uppercase text-slate-400">Pending</div>
-                  <div className="mt-2 text-lg font-semibold text-white">{pendingCount}</div>
+                <div className="rounded-lg bg-yellow-50 p-4 border border-yellow-200">
+                  <div className="text-xs uppercase text-gray-600 font-semibold">Pending</div>
+                  <div className="mt-2 text-2xl font-bold text-gray-900">{pendingCount}</div>
                 </div>
               </div>
             </div>

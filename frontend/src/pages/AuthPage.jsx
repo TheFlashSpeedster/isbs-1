@@ -58,20 +58,20 @@ export default function AuthPage({ mode }) {
   };
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen bg-gray-50">
       <Navbar />
       <div className="mx-auto flex max-w-6xl justify-center px-4 py-16">
-        <div className="glass-panel w-full max-w-md rounded-3xl p-8 shadow-card">
-          <h2 className="text-2xl font-display font-bold text-white">
+        <div className="w-full max-w-md rounded-2xl bg-white p-8 shadow-lg border border-gray-200">
+          <h2 className="text-3xl font-bold text-gray-900">
             {isLogin ? "Welcome back" : "Create your account"}
           </h2>
-          <p className="mt-2 text-sm text-slate-400">
+          <p className="mt-2 text-sm text-gray-600">
             {isLogin
               ? "Log in to book verified home professionals instantly."
               : "Start booking verified professionals in under a minute."}
           </p>
           {error ? (
-            <div className="mt-4 rounded-xl bg-red-500/20 px-4 py-2 text-sm text-red-200">
+            <div className="mt-4 rounded-lg bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700">
               {error}
             </div>
           ) : null}
@@ -84,7 +84,7 @@ export default function AuthPage({ mode }) {
                 required
                 value={form.name}
                 onChange={handleChange}
-                className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-primary-500"
+                className="w-full rounded-lg border border-gray-300 bg-white px-4 py-3 text-sm text-gray-900 placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
               />
             ) : null}
             <input
@@ -94,7 +94,7 @@ export default function AuthPage({ mode }) {
               required
               value={form.email}
               onChange={handleChange}
-              className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-primary-500"
+              className="w-full rounded-lg border border-gray-300 bg-white px-4 py-3 text-sm text-gray-900 placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
             />
             {!isLogin ? (
               <input
@@ -104,7 +104,7 @@ export default function AuthPage({ mode }) {
                 required
                 value={form.phone}
                 onChange={handleChange}
-                className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-primary-500"
+                className="w-full rounded-lg border border-gray-300 bg-white px-4 py-3 text-sm text-gray-900 placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
               />
             ) : null}
             {!isLogin ? (
@@ -112,7 +112,7 @@ export default function AuthPage({ mode }) {
                 name="role"
                 value={form.role}
                 onChange={handleChange}
-                className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white focus:outline-none focus:ring-2 focus:ring-primary-500"
+                className="w-full rounded-lg border border-gray-300 bg-white px-4 py-3 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
               >
                 <option value="CUSTOMER">👤 Customer</option>
                 <option value="PROVIDER">🛠 Service Provider</option>
@@ -124,7 +124,7 @@ export default function AuthPage({ mode }) {
                   name="serviceType"
                   value={form.serviceType}
                   onChange={handleChange}
-                  className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white focus:outline-none focus:ring-2 focus:ring-primary-500"
+                  className="w-full rounded-lg border border-gray-300 bg-white px-4 py-3 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                 >
                   <option value="Cooking">Cooking</option>
                   <option value="Electrician">Electrician</option>
@@ -139,7 +139,7 @@ export default function AuthPage({ mode }) {
                     placeholder="Latitude"
                     value={form.latitude}
                     onChange={handleChange}
-                    className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-primary-500"
+                    className="w-full rounded-lg border border-gray-300 bg-white px-4 py-3 text-sm text-gray-900 placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                   />
                   <input
                     type="number"
@@ -148,7 +148,7 @@ export default function AuthPage({ mode }) {
                     placeholder="Longitude"
                     value={form.longitude}
                     onChange={handleChange}
-                    className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-primary-500"
+                    className="w-full rounded-lg border border-gray-300 bg-white px-4 py-3 text-sm text-gray-900 placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                   />
                 </div>
               </>
@@ -160,19 +160,19 @@ export default function AuthPage({ mode }) {
               required
               value={form.password}
               onChange={handleChange}
-              className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-primary-500"
+              className="w-full rounded-lg border border-gray-300 bg-white px-4 py-3 text-sm text-gray-900 placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
             />
             <button
               type="submit"
               disabled={loading}
-              className="w-full rounded-full bg-primary-500 py-3 text-sm font-semibold text-white shadow-soft hover:bg-primary-400"
+              className="w-full rounded-lg bg-purple-600 py-3 text-sm font-semibold text-white shadow-md hover:bg-purple-700 transition-colors disabled:opacity-50"
             >
               {loading ? "Please wait..." : isLogin ? "Login" : "Create account"}
             </button>
           </form>
-          <p className="mt-6 text-sm text-slate-400">
-            {isLogin ? "New to Instant Service?" : "Already have an account?"}{" "}
-            <Link to={isLogin ? "/register" : "/login"} className="text-primary-200 hover:text-white">
+          <p className="mt-6 text-sm text-gray-600 text-center">
+            {isLogin ? "New to Home Service?" : "Already have an account?"}{" "}
+            <Link to={isLogin ? "/register" : "/login"} className="text-purple-600 hover:text-purple-700 font-medium">
               {isLogin ? "Sign up" : "Login"}
             </Link>
           </p>

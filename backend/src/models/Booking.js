@@ -15,6 +15,10 @@ const bookingSchema = new mongoose.Schema(
     etaMinutes: { type: Number, required: true },
     distanceKm: { type: Number, required: true },
     price: { type: Number, required: true },
+    userLocation: {
+      latitude: { type: Number },
+      longitude: { type: Number }
+    },
     isEmergency: { type: Boolean, default: false },
     paymentMethod: { type: String, default: "Cash" },
     paymentStatus: { type: String, enum: ["PENDING", "PAID"], default: "PENDING" },

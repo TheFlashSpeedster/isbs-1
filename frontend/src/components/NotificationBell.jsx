@@ -73,22 +73,22 @@ export default function NotificationBell() {
     <div className="relative">
       <button
         onClick={() => setOpen((prev) => !prev)}
-        className="relative rounded-full border border-white/20 px-3 py-2 text-sm text-white hover:bg-white/10"
+        className="relative rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-700 hover:bg-gray-50"
       >
         🔔
         {unreadCount > 0 ? (
-          <span className="absolute -right-1 -top-1 min-w-5 rounded-full bg-emergency px-1 text-[10px] font-semibold text-white">
+          <span className="absolute -right-1 -top-1 min-w-5 rounded-full bg-red-600 px-1 text-[10px] font-semibold text-white">
             {unreadCount > 9 ? "9+" : unreadCount}
           </span>
         ) : null}
       </button>
 
       {open ? (
-        <div className="absolute right-0 z-50 mt-2 w-80 rounded-2xl border border-white/10 bg-slate-900/95 p-3 shadow-card">
-          <div className="mb-2 text-sm font-semibold text-white">Notifications</div>
+        <div className="absolute right-0 z-50 mt-2 w-80 rounded-lg border border-gray-200 bg-white p-3 shadow-lg">
+          <div className="mb-2 text-sm font-semibold text-gray-900">Notifications</div>
           <div className="max-h-80 space-y-2 overflow-auto">
             {latest.length === 0 ? (
-              <div className="rounded-xl bg-white/5 p-3 text-xs text-slate-400">No notifications yet.</div>
+              <div className="rounded-lg bg-gray-50 p-3 text-xs text-gray-600 border border-gray-200">No notifications yet.</div>
             ) : (
               latest.map((item) => {
                 const id = item._id || item.id;
@@ -96,10 +96,10 @@ export default function NotificationBell() {
                   <button
                     key={id}
                     onClick={() => markRead(id)}
-                    className={`w-full rounded-xl p-3 text-left ${item.read ? "bg-white/5" : "bg-primary-500/20"}`}
+                    className={`w-full rounded-lg p-3 text-left border transition-colors ${item.read ? "bg-gray-50 border-gray-200" : "bg-purple-50 border-purple-200"}`}
                   >
-                    <div className="text-xs text-slate-300">{iconFor(item.type)} {item.title}</div>
-                    <div className="mt-1 text-xs text-slate-400">{item.message}</div>
+                    <div className="text-xs text-gray-700 font-medium">{iconFor(item.type)} {item.title}</div>
+                    <div className="mt-1 text-xs text-gray-600">{item.message}</div>
                   </button>
                 );
               })

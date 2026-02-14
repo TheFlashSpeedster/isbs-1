@@ -1,9 +1,16 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
+import { GoogleMap, LoadScript, Marker, Polyline } from "@react-google-maps/api";
 import Navbar from "../components/Navbar.jsx";
 import CountdownTimer from "../components/CountdownTimer.jsx";
 import api from "../utils/api.js";
 import { getSocket } from "../utils/socket.js";
+
+const trackingMapStyle = {
+  width: "100%",
+  height: "260px",
+  borderRadius: "12px"
+};
 
 export default function TrackingPage() {
   const { bookingId } = useParams();
@@ -27,6 +34,41 @@ export default function TrackingPage() {
   const booking = data?.booking;
   const provider = data?.provider;
   const customer = data?.customer;
+  const GOOGLE_MAPS_API_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY || "";
+
+  const customerPosition = useMemo(() => {
+    if (!customer?.location) return null;
+    const lat = Number(customer.location.latitude);
+    const lng = Number(customer.location.longitude);
+    if (Number.isNaN(lat) || Number.isNaN(lng)) return null;
+    return { lat, lng };
+  }, [customer?.location]);
+
+  const providerPosition = useMemo(() => {
+    if (!provider?.location) return null;
+    const lat = Number(provider.location.latitude);
+    const lng = Number(provider.location.longitude);
+    if (Number.isNaN(lat) || Number.isNaN(lng)) return null;
+    return { lat, lng };
+  }, [provider?.location]);
+
+  const mapCenter = useMemo(() => {
+    if (customerPosition && providerPosition) {
+      return {
+        lat: (customerPosition.lat + providerPosition.lat) / 2,
+        lng: (customerPosition.lng + providerPosition.lng) / 2
+      };
+    }
+    return customerPosition || providerPosition || { lat: 31.252, lng: 75.705 };
+  }, [customerPosition, providerPosition]);
+
+  const handleMapLoad = useCallback((mapInstance) => {
+    if (!window.google || !customerPosition || !providerPosition) return;
+    const bounds = new window.google.maps.LatLngBounds();
+    bounds.extend(customerPosition);
+    bounds.extend(providerPosition);
+    mapInstance.fitBounds(bounds);
+  }, [customerPosition, providerPosition]);
 
   const canCancel = useMemo(() => ["PENDING", "ACTIVE"].includes(booking?.status), [booking?.status]);
 
@@ -182,62 +224,62 @@ export default function TrackingPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen">
+      <div className="min-h-screen bg-gray-50">
         <Navbar />
-        <div className="mx-auto max-w-4xl px-4 py-16 text-center text-white">Loading booking...</div>
+        <div className="mx-auto max-w-4xl px-4 py-16 text-center text-gray-900">Loading booking...</div>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="min-h-screen">
+      <div className="min-h-screen bg-gray-50">
         <Navbar />
-        <div className="mx-auto max-w-4xl px-4 py-16 text-center text-red-200">{error}</div>
+        <div className="mx-auto max-w-4xl px-4 py-16 text-center text-red-600">{error}</div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen bg-gray-50">
       <Navbar />
       <div className="mx-auto max-w-6xl px-4 py-12">
         <div className="grid gap-8 lg:grid-cols-[1.1fr_0.9fr]">
           <div className="space-y-6">
-            <div className="glass-panel animate-rise rounded-3xl p-6 shadow-card">
+            <div className="rounded-2xl bg-white p-6 shadow-md border border-gray-200 animate-rise">
               <div className="flex items-center justify-between">
                 <div>
-                  <h2 className="text-2xl font-display font-bold text-white">📋 Live Booking Room</h2>
-                  <p className="mt-1 text-sm text-slate-400">Booking ID: {booking?.bookingId}</p>
+                  <h2 className="text-2xl font-bold text-gray-900">📋 Live Booking Room</h2>
+                  <p className="mt-1 text-sm text-gray-600">Booking ID: {booking?.bookingId}</p>
                 </div>
-                <span className="rounded-full bg-accent-500/20 px-3 py-1 text-xs text-accent-200">{booking?.status}</span>
+                <span className="rounded-full bg-purple-100 px-3 py-1 text-xs text-purple-700 font-medium">{booking?.status}</span>
               </div>
               <div className="mt-6 grid gap-4 md:grid-cols-2">
-                <div className="rounded-2xl bg-white/5 p-4">
-                  <div className="text-xs uppercase text-slate-400">🕒 ETA</div>
-                  <div className="mt-2 text-lg font-semibold text-white">{booking?.etaMinutes} mins</div>
+                <div className="rounded-lg bg-purple-50 p-4 border border-purple-200">
+                  <div className="text-xs uppercase text-gray-600 font-semibold">🕒 ETA</div>
+                  <div className="mt-2 text-lg font-bold text-gray-900">{booking?.etaMinutes} mins</div>
                 </div>
-                <div className="rounded-2xl bg-white/5 p-4">
-                  <div className="text-xs uppercase text-slate-400">📍 Distance</div>
-                  <div className="mt-2 text-lg font-semibold text-white">{booking?.distanceKm} km away</div>
+                <div className="rounded-lg bg-blue-50 p-4 border border-blue-200">
+                  <div className="text-xs uppercase text-gray-600 font-semibold">📍 Distance</div>
+                  <div className="mt-2 text-lg font-bold text-gray-900">{booking?.distanceKm} km away</div>
                 </div>
               </div>
               <div className="mt-6 flex flex-wrap items-center gap-4">
                 {booking?.etaAt ? <CountdownTimer target={booking.etaAt} /> : null}
-                <span className="text-sm text-slate-300">Provider is on the way</span>
+                <span className="text-sm text-gray-700">Provider is on the way</span>
               </div>
             </div>
 
-            <div className="glass-panel rounded-3xl p-6 shadow-card">
-              <h3 className="text-lg font-semibold text-white">💬 Real-time Chat</h3>
-              {messageStatus ? <p className="mt-2 text-xs text-red-200">{messageStatus}</p> : null}
+            <div className="rounded-2xl bg-white p-6 shadow-md border border-gray-200">
+              <h3 className="text-lg font-semibold text-gray-900">💬 Real-time Chat</h3>
+              {messageStatus ? <p className="mt-2 text-xs text-red-600">{messageStatus}</p> : null}
               <div className="mt-4 max-h-72 space-y-3 overflow-auto">
                 {messages.length === 0 ? (
-                  <div className="rounded-2xl bg-white/5 p-3 text-sm text-slate-400">No messages yet. Start the conversation.</div>
+                  <div className="rounded-lg bg-gray-50 p-3 text-sm text-gray-600 border border-gray-200">No messages yet. Start the conversation.</div>
                 ) : (
                   messages.map((message, idx) => (
-                    <div key={`${message.sentAt}-${idx}`} className="rounded-2xl bg-white/5 p-3 text-sm text-slate-200">
-                      <span className="font-semibold text-primary-200">{message.senderName || message.senderRole}:</span>{" "}
+                    <div key={`${message.sentAt}-${idx}`} className="rounded-lg bg-gray-50 p-3 text-sm text-gray-700 border border-gray-200">
+                      <span className="font-semibold text-purple-600">{message.senderName || message.senderRole}:</span>{" "}
                       {message.text}
                     </div>
                   ))
@@ -249,23 +291,23 @@ export default function TrackingPage() {
                   value={messageInput}
                   onChange={(event) => setMessageInput(event.target.value)}
                   placeholder="Type a message"
-                  className="flex-1 rounded-2xl border border-white/10 bg-white/5 px-4 py-2 text-sm text-white placeholder:text-slate-500"
+                  className="flex-1 rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm text-gray-900 placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                 />
-                <button type="submit" className="rounded-full bg-primary-500 px-4 py-2 text-sm font-semibold text-white">
+                <button type="submit" className="rounded-lg bg-purple-600 px-4 py-2 text-sm font-semibold text-white hover:bg-purple-700">
                   Send
                 </button>
               </form>
             </div>
 
             {!isProviderUser ? (
-              <div className="glass-panel rounded-3xl p-6 shadow-card">
-                <h3 className="text-lg font-semibold text-white">⭐ Rate Service</h3>
-                {feedbackStatus ? <p className="mt-3 text-sm text-accent-200">{feedbackStatus}</p> : null}
+              <div className="rounded-2xl bg-white p-6 shadow-md border border-gray-200">
+                <h3 className="text-lg font-semibold text-gray-900">⭐ Rate Service</h3>
+                {feedbackStatus ? <p className="mt-3 text-sm text-purple-600">{feedbackStatus}</p> : null}
                 <form className="mt-4 space-y-3" onSubmit={handleFeedback}>
                   <select
                     value={rating}
                     onChange={(event) => setRating(event.target.value)}
-                    className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-2 text-sm text-white"
+                    className="w-full rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                   >
                     <option value="5">5 - Excellent</option>
                     <option value="4">4 - Great</option>
@@ -278,9 +320,9 @@ export default function TrackingPage() {
                     value={review}
                     onChange={(event) => setReview(event.target.value)}
                     placeholder="Share review"
-                    className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-2 text-sm text-white placeholder:text-slate-500"
+                    className="w-full rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm text-gray-900 placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                   />
-                  <button type="submit" className="w-full rounded-full bg-accent-500 px-4 py-2 text-sm font-semibold text-white">
+                  <button type="submit" className="w-full rounded-lg bg-purple-600 px-4 py-2 text-sm font-semibold text-white hover:bg-purple-700">
                     Submit Review
                   </button>
                 </form>
@@ -289,21 +331,81 @@ export default function TrackingPage() {
           </div>
 
           <div className="space-y-6">
+            <div className="rounded-2xl bg-white p-6 shadow-md border border-gray-200">
+              <h3 className="text-lg font-semibold text-gray-900">🧭 Live Location</h3>
+              <p className="mt-1 text-xs text-gray-600">Your location and the provider on the same map.</p>
+              <div className="mt-4">
+                {!GOOGLE_MAPS_API_KEY ? (
+                  <div className="rounded-lg bg-yellow-50 border border-yellow-200 p-3 text-xs text-yellow-800">
+                    Add VITE_GOOGLE_MAPS_API_KEY in .env to enable live tracking map.
+                  </div>
+                ) : !customerPosition && !providerPosition ? (
+                  <div className="rounded-lg bg-gray-50 border border-gray-200 p-3 text-xs text-gray-600">
+                    Location data is not available for this booking.
+                  </div>
+                ) : (
+                  <LoadScript googleMapsApiKey={GOOGLE_MAPS_API_KEY}>
+                    <GoogleMap
+                      mapContainerStyle={trackingMapStyle}
+                      center={mapCenter}
+                      zoom={14}
+                      onLoad={handleMapLoad}
+                      options={{
+                        streetViewControl: false,
+                        mapTypeControl: false,
+                        fullscreenControl: true
+                      }}
+                    >
+                      {customerPosition ? (
+                        <Marker
+                          position={customerPosition}
+                          title="Your Location"
+                          icon={window.google ? {
+                            url: "data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3e%3ccircle cx='12' cy='12' r='10' fill='%233B82F6' stroke='white' stroke-width='3'/%3e%3c/svg%3e",
+                            scaledSize: new window.google.maps.Size(24, 24)
+                          } : undefined}
+                        />
+                      ) : null}
+                      {providerPosition ? (
+                        <Marker
+                          position={providerPosition}
+                          title="Service Provider"
+                          icon={window.google ? {
+                            url: "data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' width='26' height='26' viewBox='0 0 24 24'%3e%3ccircle cx='12' cy='12' r='10' fill='%239333EA' stroke='white' stroke-width='3'/%3e%3c/svg%3e",
+                            scaledSize: new window.google.maps.Size(26, 26)
+                          } : undefined}
+                        />
+                      ) : null}
+                      {customerPosition && providerPosition ? (
+                        <Polyline
+                          path={[customerPosition, providerPosition]}
+                          options={{
+                            strokeColor: "#7C3AED",
+                            strokeOpacity: 0.8,
+                            strokeWeight: 4
+                          }}
+                        />
+                      ) : null}
+                    </GoogleMap>
+                  </LoadScript>
+                )}
+              </div>
+            </div>
             {!isProviderUser ? (
-              <div className="glass-panel rounded-3xl p-6 shadow-card">
-                <h3 className="text-lg font-semibold text-white">👷 Assigned Provider</h3>
+              <div className="rounded-2xl bg-white p-6 shadow-md border border-gray-200">
+                <h3 className="text-lg font-semibold text-gray-900">👷 Assigned Provider</h3>
                 <div className="mt-4 flex items-center gap-4">
-                  <img src={provider?.imageUrl} alt={provider?.name} className="h-16 w-16 rounded-2xl object-cover" />
+                  <img src={provider?.imageUrl} alt={provider?.name} className="h-16 w-16 rounded-lg object-cover" />
                   <div>
-                    <div className="text-base font-semibold text-white">{provider?.name}</div>
-                    <div className="text-sm text-slate-400">Rating {provider?.rating}</div>
+                    <div className="text-base font-semibold text-gray-900">{provider?.name}</div>
+                    <div className="text-sm text-gray-600">Rating {provider?.rating}</div>
                   </div>
                 </div>
               </div>
             ) : (
-              <div className="glass-panel rounded-3xl p-6 shadow-card">
-                <h3 className="text-lg font-semibold text-white">👤 Customer Details</h3>
-                <div className="mt-4 space-y-2 text-sm text-slate-300">
+              <div className="rounded-2xl bg-white p-6 shadow-md border border-gray-200">
+                <h3 className="text-lg font-semibold text-gray-900">👤 Customer Details</h3>
+                <div className="mt-4 space-y-2 text-sm text-gray-700">
                   <div>Name: {customer?.name || "-"}</div>
                   <div>Phone: {customer?.phone || "-"}</div>
                 </div>
@@ -311,14 +413,14 @@ export default function TrackingPage() {
             )}
 
             {isProviderUser ? (
-              <div className="glass-panel rounded-3xl p-6 shadow-card">
-                <h3 className="text-lg font-semibold text-white">⚡ Quick Actions</h3>
-                {providerActionStatus ? <p className="mt-3 text-sm text-accent-200">{providerActionStatus}</p> : null}
+              <div className="rounded-2xl bg-white p-6 shadow-md border border-gray-200">
+                <h3 className="text-lg font-semibold text-gray-900">⚡ Quick Actions</h3>
+                {providerActionStatus ? <p className="mt-3 text-sm text-purple-600">{providerActionStatus}</p> : null}
                 <div className="mt-4 grid grid-cols-2 gap-3">
-                  <button onClick={() => providerAction("ACCEPT")} className="rounded-full bg-accent-500 py-2 text-sm font-semibold text-white">
+                  <button onClick={() => providerAction("ACCEPT")} className="rounded-lg bg-green-600 py-2 text-sm font-semibold text-white hover:bg-green-700">
                     Accept
                   </button>
-                  <button onClick={() => providerAction("REJECT")} className="rounded-full bg-emergency py-2 text-sm font-semibold text-white">
+                  <button onClick={() => providerAction("REJECT")} className="rounded-lg bg-red-600 py-2 text-sm font-semibold text-white hover:bg-red-700">
                     Reject
                   </button>
                 </div>
@@ -328,38 +430,38 @@ export default function TrackingPage() {
                     placeholder="Update note"
                     value={providerUpdate.note}
                     onChange={(event) => setProviderUpdate((prev) => ({ ...prev, note: event.target.value }))}
-                    className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-2 text-sm text-white placeholder:text-slate-500"
+                    className="w-full rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm text-gray-900 placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                   />
                   <input
                     type="number"
                     placeholder="New ETA (minutes)"
                     value={providerUpdate.etaMinutes}
                     onChange={(event) => setProviderUpdate((prev) => ({ ...prev, etaMinutes: event.target.value }))}
-                    className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-2 text-sm text-white placeholder:text-slate-500"
+                    className="w-full rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm text-gray-900 placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                   />
-                  <button onClick={() => providerAction("UPDATE")} className="w-full rounded-full bg-primary-500 py-2 text-sm font-semibold text-white">
+                  <button onClick={() => providerAction("UPDATE")} className="w-full rounded-lg bg-purple-600 py-2 text-sm font-semibold text-white hover:bg-purple-700">
                     Update Delivery Info
                   </button>
                 </div>
               </div>
             ) : (
-              <div className="glass-panel rounded-3xl p-6 shadow-card">
-                <h3 className="text-lg font-semibold text-white">💳 Payment</h3>
-                <div className="mt-4 text-sm text-slate-300">Total: Rs {booking?.price}</div>
-                <div className="mt-2 text-xs text-slate-400">Method: {booking?.paymentMethod || "Cash"}</div>
-                <div className="mt-2 text-xs text-slate-400">Status: {booking?.paymentStatus || "PENDING"}</div>
+              <div className="rounded-2xl bg-white p-6 shadow-md border border-gray-200">
+                <h3 className="text-lg font-semibold text-gray-900">💳 Payment</h3>
+                <div className="mt-4 text-sm text-gray-700">Total: Rs {booking?.price}</div>
+                <div className="mt-2 text-xs text-gray-600">Method: {booking?.paymentMethod || "Cash"}</div>
+                <div className="mt-2 text-xs text-gray-600">Status: {booking?.paymentStatus || "PENDING"}</div>
                 {booking?.paymentStatus !== "PAID" ? (
-                  <button onClick={handlePay} className="mt-4 w-full rounded-full bg-accent-500 py-2 text-sm font-semibold text-white">
+                  <button onClick={handlePay} className="mt-4 w-full rounded-lg bg-purple-600 py-2 text-sm font-semibold text-white hover:bg-purple-700">
                     Pay Now (Test)
                   </button>
                 ) : (
-                  <div className="mt-4 rounded-2xl bg-white/5 p-3 text-xs text-slate-300">Paid - Txn {booking?.paymentTxnId}</div>
+                  <div className="mt-4 rounded-lg bg-green-50 p-3 text-xs text-green-700 border border-green-200">Paid - Txn {booking?.paymentTxnId}</div>
                 )}
 
                 {canCancel ? (
                   <button
                     onClick={handleCancel}
-                    className="mt-4 w-full rounded-full border border-white/10 py-2 text-sm font-semibold text-white hover:bg-white/10"
+                    className="mt-4 w-full rounded-lg border border-gray-300 bg-white py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50"
                   >
                     Cancel Booking
                   </button>

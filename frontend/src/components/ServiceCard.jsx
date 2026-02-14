@@ -14,23 +14,48 @@ export default function ServiceCard({ service }) {
   };
 
   return (
-    <div className="glass-panel rounded-3xl p-6 shadow-card transition hover:-translate-y-1 hover:shadow-soft">
-      <div className="flex items-center justify-between">
-        <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-primary-500/20 text-xl text-primary-100">
-          {service.icon}
+    <div className="group overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm transition-all hover:shadow-lg">
+      {/* Service Image */}
+      <div className="relative h-48 overflow-hidden bg-gradient-to-br from-purple-100 to-blue-100">
+        <div className="absolute inset-0 flex items-center justify-center">
+          <div className={`flex h-24 w-24 items-center justify-center rounded-full ${service.color} text-5xl transition-transform group-hover:scale-110`}>
+            {service.icon}
+          </div>
         </div>
-        <span className="rounded-full bg-accent-500/20 px-3 py-1 text-xs text-accent-200">
-          {service.arrival}
-        </span>
+        {service.category && (
+          <div className="absolute right-3 top-3">
+            <span className="rounded-full bg-white px-3 py-1 text-xs font-medium text-gray-700 shadow-sm">
+              {service.category}
+            </span>
+          </div>
+        )}
       </div>
-      <h3 className="mt-4 text-lg font-semibold text-white">{service.name}</h3>
-      <p className="mt-1 text-sm text-slate-300">Starting at Rs {service.price}</p>
-      <button
-        onClick={handleBook}
-        className="mt-6 w-full rounded-full bg-primary-500 py-2 text-sm font-semibold text-white shadow-soft hover:bg-primary-400"
-      >
-        Book Now
-      </button>
+
+      {/* Service Details */}
+      <div className="p-5">
+        <h3 className="text-lg font-bold text-gray-900">{service.name}</h3>
+        
+        {service.provider && (
+          <div className="mt-2 flex items-center gap-2 text-sm text-gray-600">
+            <span className="text-purple-600">👤</span>
+            <span>{service.provider}</span>
+          </div>
+        )}
+        
+        {service.address && (
+          <div className="mt-1 flex items-start gap-2 text-sm text-gray-500">
+            <span className="text-purple-600 mt-0.5">📍</span>
+            <span className="line-clamp-2">{service.address}</span>
+          </div>
+        )}
+
+        <button
+          onClick={handleBook}
+          className="mt-4 w-full rounded-lg bg-purple-600 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-purple-700"
+        >
+          Book Now
+        </button>
+      </div>
     </div>
   );
 }

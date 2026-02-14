@@ -3,15 +3,14 @@
 @tailwind utilities;
 
 :root {
-  color-scheme: dark;
+  color-scheme: light;
 }
 
 body {
-  font-family: "Manrope", sans-serif;
-  background: radial-gradient(circle at top, rgba(0, 122, 204, 0.25), transparent 55%),
-    radial-gradient(circle at 20% 20%, rgba(18, 198, 134, 0.18), transparent 40%),
-    #020617;
+  font-family: "Outfit", sans-serif;
+  background: #ffffff;
   min-height: 100vh;
+  color: #1f2937;
 }
 
 .glass-panel {

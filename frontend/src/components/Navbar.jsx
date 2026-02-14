@@ -15,44 +15,38 @@ export default function Navbar() {
   };
 
   return (
-    <header className="sticky top-0 z-50 bg-slate-950/70 backdrop-blur border-b border-white/10">
-      <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-4">
-        <Link to="/" className="text-xl font-display font-bold text-white">
-          Instant Service
+    <header className="sticky top-0 z-50 bg-white border-b border-gray-200 shadow-sm">
+      <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-4 sm:px-6 lg:px-8">
+        <Link to="/" className="flex items-center gap-2">
+          <img src="/logo.svg" alt="Logo" className="h-8" onError={(e) => e.target.style.display = 'none'} />
+          <span className="text-xl font-bold text-gray-900"></span>
         </Link>
-        <nav className="hidden items-center gap-6 text-sm text-slate-200 md:flex">
-          <Link to="/" className="hover:text-white">Home</Link>
-          <a href="#services" className="hover:text-white">Services</a>
-          {token ? <Link to="/dashboard" className="hover:text-white">Dashboard</Link> : null}
+        <nav className="hidden items-center gap-8 text-sm font-medium text-gray-700 md:flex">
+          <Link to="/" className="hover:text-purple-600">Home</Link>
+          <a href="#services" className="hover:text-purple-600">Services</a>
+          <Link to="/" className="hover:text-purple-600">About Us</Link>
+          {token ? <Link to="/dashboard" className="hover:text-purple-600">Dashboard</Link> : null}
         </nav>
         <div className="flex items-center gap-3">
           {token ? (
             <>
-              <div className="hidden text-sm text-slate-300 md:block">
+              <div className="hidden text-sm text-gray-700 md:block">
                 Hi, {user?.name || "User"}
               </div>
               <button
                 onClick={handleLogout}
-                className="rounded-full border border-white/20 px-4 py-2 text-sm text-white hover:bg-white/10"
+                className="rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
               >
                 Logout
               </button>
             </>
           ) : (
-            <>
-              <Link
-                to="/login"
-                className="rounded-full border border-white/20 px-4 py-2 text-sm text-white hover:bg-white/10"
-              >
-                Login
-              </Link>
-              <Link
-                to="/register"
-                className="rounded-full bg-primary-500 px-4 py-2 text-sm font-semibold text-white shadow-soft hover:bg-primary-400"
-              >
-                Sign up
-              </Link>
-            </>
+            <Link
+              to="/login"
+              className="rounded-md bg-white px-4 py-2 text-sm font-medium text-gray-700 border border-gray-300 hover:bg-gray-50"
+            >
+              Login / Sign Up
+            </Link>
           )}
         </div>
       </div>

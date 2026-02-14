@@ -36,6 +36,79 @@ app.get("/", (req, res) => {
 
 app.use(authRoutes);
 app.use(servicesRoutes);
+
+// Public nearby providers endpoint (no auth required)
+app.post("/nearby-providers", async (req, res) => {
+  try {
+    const { serviceType, userLocation } = req.body;
+    
+    if (!serviceType) {
+      return res.status(400).json({ message: "serviceType is required" });
+    }
+
+    const location = userLocation || { latitude: 28.6139, longitude: 77.209 };
+    const providers = await Provider.find({ serviceType, availability: true })
+      .populate("user", "name phone")
+      .lean();
+
+    if (!providers.length) {
+      return res.status(404).json({ 
+        message: "No providers available for this service",
+        providers: [] 
+      });
+    }
+
+    // Haversine distance calculation
+    function haversineDistanceKm(loc1, loc2) {
+      const R = 6371; // Earth's radius in km
+      const dLat = (loc2.latitude - loc1.latitude) * Math.PI / 180;
+      const dLon = (loc2.longitude - loc1.longitude) * Math.PI / 180;
+      const a = 
+        Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+        Math.cos(loc1.latitude * Math.PI / 180) * Math.cos(loc2.latitude * Math.PI / 180) *
+        Math.sin(dLon / 2) * Math.sin(dLon / 2);
+      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+      return R * c;
+    }
+
+    // Calculate ETA
+    function computeEta(distanceKm) {
+      const avgSpeed = 30;
+      const distanceMinutes = Math.ceil((distanceKm / avgSpeed) * 60);
+      return Math.max(15, distanceMinutes);
+    }
+
+    const nearbyProviders = providers
+      .map((provider) => {
+        const distanceKm = haversineDistanceKm(location, provider.location);
+        const etaMinutes = computeEta(distanceKm);
+        
+        return {
+          id: provider._id,
+          name: provider.name,
+          serviceType: provider.serviceType,
+          rating: provider.rating,
+          imageUrl: provider.imageUrl,
+          location: provider.location,
+          distanceKm: Number(distanceKm.toFixed(2)),
+          etaMinutes,
+          availability: provider.availability
+        };
+      })
+      .sort((a, b) => a.distanceKm - b.distanceKm)
+      .slice(0, 10);
+
+    return res.json({
+      providers: nearbyProviders,
+      count: nearbyProviders.length,
+      userLocation: location
+    });
+  } catch (err) {
+    console.error("Error finding nearby providers:", err);
+    return res.status(500).json({ message: "Failed to find nearby providers" });
+  }
+});
+
 app.use(authRequired, bookingRoutes);
 
 const port = process.env.PORT || 4000;

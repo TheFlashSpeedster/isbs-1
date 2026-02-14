@@ -18,7 +18,7 @@ export default function CountdownTimer({ target }) {
   }, [target]);
 
   return (
-    <div className="rounded-2xl bg-primary-500/20 px-4 py-2 text-sm font-semibold text-primary-200">
+    <div className="rounded-lg bg-purple-100 border border-purple-200 px-4 py-2 text-sm font-semibold text-purple-700">
       ETA in {format(remaining)}
     </div>
   );
