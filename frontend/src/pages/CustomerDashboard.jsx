@@ -11,6 +11,23 @@ export default function CustomerDashboard() {
   const [error, setError] = useState("");
   const user = JSON.parse(localStorage.getItem("user") || "null");
 
+  const getStatusBadge = (status) => {
+    switch (status) {
+      case "ACTIVE":
+        return "bg-green-100 text-green-700";
+      case "PENDING":
+        return "bg-yellow-100 text-yellow-700";
+      case "COMPLETED":
+        return "bg-blue-100 text-blue-700";
+      case "CANCELLED":
+        return "bg-gray-200 text-gray-700";
+      case "REJECTED":
+        return "bg-red-100 text-red-700";
+      default:
+        return "bg-purple-100 text-purple-700";
+    }
+  };
+
   useEffect(() => {
     const token = localStorage.getItem("token");
     if (!token) {
@@ -32,7 +49,12 @@ export default function CustomerDashboard() {
     fetchHistory();
   }, [navigate]);
 
-  const activeBooking = bookings.find((booking) => booking.status === "ACTIVE" || booking.status === "PENDING");
+  const safeBookings = bookings.filter((booking) =>
+    booking && booking.bookingId && booking.serviceType && booking.status
+  );
+  const activeBooking = safeBookings.find((booking) =>
+    booking.status === "ACTIVE" || booking.status === "PENDING"
+  );
   const handleCancel = async (bookingId) => {
     try {
       await api.post(`/booking/${bookingId}/cancel`);
@@ -50,6 +72,11 @@ export default function CustomerDashboard() {
     <div className="min-h-screen bg-gray-50">
       <Navbar />
       <div className="mx-auto max-w-6xl px-4 py-12">
+        {error ? (
+          <div className="mb-6 rounded-lg bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700">
+            {error}
+          </div>
+        ) : null}
         <div className="flex flex-col gap-8 lg:flex-row">
           <div className="flex-1 space-y-6">
             <div className="rounded-2xl bg-white p-6 shadow-md border border-gray-200">
@@ -91,26 +118,34 @@ export default function CustomerDashboard() {
 
             <div className="rounded-2xl bg-white p-6 shadow-md border border-gray-200">
               <h3 className="text-lg font-semibold text-gray-900">📚 Booking History</h3>
-              {error ? <p className="mt-3 text-sm text-red-600">{error}</p> : null}
               <div className="mt-4 space-y-3">
-                {bookings.length === 0 && !loading ? (
+                {loading ? (
+                  <p className="text-sm text-gray-600">Loading booking history...</p>
+                ) : safeBookings.length === 0 ? (
                   <p className="text-sm text-gray-600">No bookings yet.</p>
                 ) : (
-                  bookings.map((booking) => (
-                    <div key={booking.bookingId} className="rounded-lg bg-gray-50 p-4 border border-gray-200">
+                  safeBookings.map((booking) => (
+                    <Link
+                      key={booking.bookingId}
+                      to={`/booking/${booking.bookingId}`}
+                      className="block rounded-lg bg-gray-50 p-4 border border-gray-200 hover:border-purple-300 hover:shadow-sm transition"
+                    >
                       <div className="flex items-center justify-between">
                         <div>
                           <div className="text-sm text-gray-600">{booking.serviceType}</div>
                           <div className="text-sm font-semibold text-gray-900">{booking.bookingId}</div>
                         </div>
-                        <span className="rounded-full bg-purple-100 px-3 py-1 text-xs text-purple-700 font-medium">
+                        <span className={`rounded-full px-3 py-1 text-xs font-medium ${getStatusBadge(booking.status)}`}>
                           {booking.status}
                         </span>
                       </div>
                       <div className="mt-2 text-xs text-gray-500">
-                        Provider: {booking.providerName || "Assigned"} | {new Date(booking.createdAt).toLocaleString()}
+                        Provider: {booking.providerName || "Assigned"} | {booking.createdAt ? new Date(booking.createdAt).toLocaleString() : "-"}
                       </div>
-                    </div>
+                      <div className="mt-2 text-xs text-purple-600 font-medium">
+                        View details & tracking
+                      </div>
+                    </Link>
                   ))
                 )}
               </div>

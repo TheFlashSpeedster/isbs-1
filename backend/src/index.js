@@ -38,6 +38,23 @@ app.use(authRoutes);
 app.use(servicesRoutes);
 
 // Public nearby providers endpoint (no auth required)
+const serviceAliases = {
+  Electric: ["Electric", "Electrician"],
+  Electrician: ["Electric", "Electrician"],
+  Plumbing: ["Plumbing", "Plumber"],
+  Plumber: ["Plumbing", "Plumber"],
+  Repair: ["Repair"],
+  Cleaning: ["Cleaning"],
+  Painting: ["Painting"],
+  Shifting: ["Shifting"],
+  Cooking: ["Cooking"],
+  Misc: ["Misc"]
+};
+
+function resolveServiceTypes(serviceType) {
+  return serviceAliases[serviceType] || [serviceType];
+}
+
 app.post("/nearby-providers", async (req, res) => {
   try {
     const { serviceType, userLocation } = req.body;
@@ -47,7 +64,8 @@ app.post("/nearby-providers", async (req, res) => {
     }
 
     const location = userLocation || { latitude: 28.6139, longitude: 77.209 };
-    const providers = await Provider.find({ serviceType, availability: true })
+    const serviceTypes = resolveServiceTypes(serviceType);
+    const providers = await Provider.find({ serviceType: { $in: serviceTypes }, availability: true })
       .populate("user", "name phone")
       .lean();
 

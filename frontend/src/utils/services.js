@@ -1,11 +1,19 @@
 export const services = [
   {
+    id: "cooking",
+    name: "Cooking",
+    icon: "🍲",
+    price: 249,
+    arrival: "Arrives in 15 mins",
+    color: "bg-purple-100"
+  },
+  {
     id: "cleaning",
     name: "Cleaning",
     icon: "🧹",
     price: 249,
     arrival: "Arrives in 15 mins",
-    color: "bg-purple-100"
+    color: "bg-blue-100"
   },
   {
     id: "repair",

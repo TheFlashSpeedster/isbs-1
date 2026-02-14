@@ -16,8 +16,11 @@ export default function ProviderDashboard() {
   const [messageInput, setMessageInput] = useState("");
   const [actionForm, setActionForm] = useState({ note: "", etaMinutes: "" });
   const [status, setStatus] = useState("");
+  const [loading, setLoading] = useState(true);
 
   const fetchAssignments = async () => {
+    setLoading(true);
+    setStatus("");
     try {
       const response = await api.get("/provider/assignments");
       const bookings = response.data.bookings || [];
@@ -28,6 +31,8 @@ export default function ProviderDashboard() {
       }
     } catch (err) {
       setStatus("Unable to load assignments");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -163,6 +168,11 @@ export default function ProviderDashboard() {
     <div className="min-h-screen bg-gray-50">
       <Navbar />
       <div className="mx-auto max-w-6xl px-4 py-12">
+        {status ? (
+          <div className="mb-6 rounded-lg bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700">
+            {status}
+          </div>
+        ) : null}
         <div className="grid gap-8 lg:grid-cols-[1.1fr_0.9fr]">
           <div className="space-y-6">
             <div className="rounded-2xl bg-white p-6 shadow-md border border-gray-200">
@@ -190,9 +200,12 @@ export default function ProviderDashboard() {
 
             <div className="rounded-2xl bg-white p-6 shadow-md border border-gray-200">
               <h3 className="text-lg font-semibold text-gray-900">📦 Assigned Jobs</h3>
-              {status ? <p className="mt-3 text-xs text-red-600">{status}</p> : null}
               <div className="mt-4 space-y-3">
-                {assignments.length === 0 ? (
+                {loading ? (
+                  <div className="rounded-lg bg-gray-50 p-4 text-sm text-gray-600 border border-gray-200">
+                    Loading assignments...
+                  </div>
+                ) : assignments.length === 0 ? (
                   <div className="rounded-lg bg-gray-50 p-4 text-sm text-gray-600 border border-gray-200">
                     No active assignments yet.
                   </div>
@@ -234,7 +247,11 @@ export default function ProviderDashboard() {
                 </p>
               ) : null}
               <div className="mt-4 space-y-3 max-h-64 overflow-y-auto">
-                {messages.length === 0 ? (
+                {!selectedBooking ? (
+                  <div className="rounded-lg bg-gray-50 p-3 text-sm text-gray-600 border border-gray-200">
+                    Select a booking to view messages.
+                  </div>
+                ) : messages.length === 0 ? (
                   <div className="rounded-lg bg-gray-50 p-3 text-sm text-gray-600 border border-gray-200">
                     No messages yet.
                   </div>

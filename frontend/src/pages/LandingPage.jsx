@@ -10,8 +10,11 @@ export default function LandingPage() {
 
   const handleSearch = (e) => {
     e.preventDefault();
-    // Handle search functionality
-    console.log("Searching for:", searchQuery);
+    if (!searchQuery.trim()) return;
+    const section = document.getElementById("services");
+    if (section) {
+      section.scrollIntoView({ behavior: "smooth" });
+    }
   };
 
   return (
@@ -82,6 +85,11 @@ export default function LandingPage() {
                 const token = localStorage.getItem("token");
                 if (!token) {
                   navigate("/login");
+                  return;
+                }
+                const user = JSON.parse(localStorage.getItem("user") || "null");
+                if (user?.role && user.role !== "CUSTOMER") {
+                  navigate("/dashboard");
                   return;
                 }
                 navigate(`/book/${service.id}`);
@@ -190,7 +198,6 @@ export default function LandingPage() {
           <div className="flex flex-col items-center gap-6">
             <div className="flex items-center gap-2">
               <img src="/logo.svg" alt="Logo" className="h-8" onError={(e) => e.target.style.display = 'none'} />
-              <span className="text-xl font-bold text-gray-900">Home Service</span>
             </div>
             <nav className="flex flex-wrap justify-center gap-8 text-sm text-gray-600">
               <Link to="/" className="hover:text-purple-600">Home</Link>

@@ -20,6 +20,23 @@ const basePrices = {
   Electric: 399
 };
 
+const serviceAliases = {
+  Electric: ["Electric", "Electrician"],
+  Electrician: ["Electric", "Electrician"],
+  Plumbing: ["Plumbing", "Plumber"],
+  Plumber: ["Plumbing", "Plumber"],
+  Repair: ["Repair"],
+  Cleaning: ["Cleaning"],
+  Painting: ["Painting"],
+  Shifting: ["Shifting"],
+  Cooking: ["Cooking"],
+  Misc: ["Misc"]
+};
+
+function resolveServiceTypes(serviceType) {
+  return serviceAliases[serviceType] || [serviceType];
+}
+
 function buildBookingId() {
   const random = Math.floor(100 + Math.random() * 900);
   return `SRV${Date.now()}${random}`;
@@ -99,62 +116,10 @@ function toBookingPayload(booking) {
   };
 }
 
-// Find nearby providers endpoint
-router.post("/nearby-providers", async (req, res) => {
-  try {
-    const { serviceType, userLocation } = req.body;
-    
-    if (!serviceType) {
-      return res.status(400).json({ message: "serviceType is required" });
-    }
-
-    const location = userLocation || { latitude: 28.6139, longitude: 77.209 };
-    const providers = await Provider.find({ serviceType, availability: true })
-      .populate("user", "name phone")
-      .lean();
-
-    if (!providers.length) {
-      return res.status(404).json({ 
-        message: "No providers available for this service",
-        providers: [] 
-      });
-    }
-
-    const nearbyProviders = providers
-      .map((provider) => {
-        const distanceKm = haversineDistanceKm(location, provider.location);
-        const { etaMinutes } = computeEta(distanceKm, false);
-        
-        return {
-          id: provider._id,
-          name: provider.name,
-          serviceType: provider.serviceType,
-          rating: provider.rating,
-          imageUrl: provider.imageUrl,
-          location: provider.location,
-          distanceKm: Number(distanceKm.toFixed(2)),
-          etaMinutes,
-          availability: provider.availability
-        };
-      })
-      .sort((a, b) => a.distanceKm - b.distanceKm)
-      .slice(0, 10); // Return top 10 nearest providers
-
-    return res.json({
-      providers: nearbyProviders,
-      count: nearbyProviders.length,
-      userLocation: location
-    });
-  } catch (err) {
-    console.error("Error finding nearby providers:", err);
-    return res.status(500).json({ message: "Failed to find nearby providers" });
-  }
-});
-
 router.post("/book", async (req, res) => {
   try {
-    if (req.user.role === "PROVIDER") {
-      return res.status(403).json({ message: "Providers cannot create customer bookings" });
+    if (req.user.role !== "CUSTOMER") {
+      return res.status(403).json({ message: "Only customers can create bookings" });
     }
 
     const { serviceType, userLocation, isEmergency, paymentMethod, preferredProviderId } = req.body;
@@ -167,10 +132,12 @@ router.post("/book", async (req, res) => {
     let assigned = null;
     let distanceKm = 0;
 
+    const serviceTypes = resolveServiceTypes(serviceType);
+
     // If customer selected a specific provider, try to assign them
     if (preferredProviderId) {
       const preferredProvider = await Provider.findOneAndUpdate(
-        { _id: preferredProviderId, serviceType, availability: true },
+        { _id: preferredProviderId, serviceType: { $in: serviceTypes }, availability: true },
         { availability: false },
         { new: true }
       );
@@ -186,7 +153,7 @@ router.post("/book", async (req, res) => {
 
     // If no provider assigned yet (either no preference or preferred was unavailable), auto-assign nearest
     if (!assigned) {
-      const providers = await Provider.find({ serviceType, availability: true }).lean();
+      const providers = await Provider.find({ serviceType: { $in: serviceTypes }, availability: true }).lean();
 
       if (!providers.length) {
         return res.status(404).json({ message: "No providers available" });

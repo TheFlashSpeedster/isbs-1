@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useEffect } from "react";
+import React, { useState, useCallback, useEffect, useRef } from "react";
 import { GoogleMap, LoadScript, Marker, InfoWindow } from "@react-google-maps/api";
 
 const mapContainerStyle = {
@@ -20,22 +20,15 @@ export default function ProvidersMap({
   const [locationError, setLocationError] = useState("");
   const [manualLat, setManualLat] = useState(userLocation?.lat?.toString() || "31.2520");
   const [manualLng, setManualLng] = useState(userLocation?.lng?.toString() || "75.7050");
-  const [isScriptLoaded, setIsScriptLoaded] = useState(false);
+  const autoDetectRequestedRef = useRef(false);
 
   const GOOGLE_MAPS_API_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY || "";
 
   const center = userLocation || { lat: 31.2520, lng: 75.7050 };
 
-  // Log providers for debugging
-  useEffect(() => {
-    console.log("ProvidersMap - providers updated:", providers.length, providers);
-    console.log("ProvidersMap - userLocation:", userLocation);
-    console.log("ProvidersMap - isScriptLoaded:", isScriptLoaded);
-  }, [providers, userLocation, isScriptLoaded]);
-
   // Update map bounds when providers change
   useEffect(() => {
-    if (map && providers.length > 0) {
+    if (map && providers.length > 0 && window.google) {
       try {
         const bounds = new window.google.maps.LatLngBounds();
         
@@ -53,8 +46,8 @@ export default function ProvidersMap({
         });
         
         map.fitBounds(bounds);
-      } catch (err) {
-        console.error("Error fitting bounds:", err);
+      } catch {
+        // Ignore map bounds errors to avoid console noise
       }
     }
   }, [map, providers, userLocation]);
@@ -68,12 +61,18 @@ export default function ProvidersMap({
     setSelectedMarker(null);
   }, [onLocationSelect]);
 
-  const handleAutoDetect = () => {
+  const detectLocation = useCallback(() => {
     setIsLoadingGPS(true);
     setLocationError("");
 
     if (!navigator.geolocation) {
       setLocationError("Geolocation is not supported by your browser");
+      setIsLoadingGPS(false);
+      return;
+    }
+
+    if (!window.isSecureContext) {
+      setLocationError("Location access requires HTTPS or localhost");
       setIsLoadingGPS(false);
       return;
     }
@@ -105,7 +104,24 @@ export default function ProvidersMap({
       },
       { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
     );
+  }, [onLocationSelect]);
+
+  const handleAutoDetect = () => {
+    detectLocation();
   };
+
+  useEffect(() => {
+    if (autoDetectRequestedRef.current) return;
+    const isDefaultLocation =
+      userLocation &&
+      Math.abs(userLocation.lat - 31.252) < 0.0005 &&
+      Math.abs(userLocation.lng - 75.705) < 0.0005;
+
+    if (!userLocation || isDefaultLocation) {
+      autoDetectRequestedRef.current = true;
+      detectLocation();
+    }
+  }, [detectLocation, userLocation]);
 
   const handleManualUpdate = () => {
     const lat = parseFloat(manualLat);
@@ -197,10 +213,7 @@ export default function ProvidersMap({
         </div>
       )}
 
-      <LoadScript 
-        googleMapsApiKey={GOOGLE_MAPS_API_KEY}
-        onLoad={() => setIsScriptLoaded(true)}
-      >
+      <LoadScript googleMapsApiKey={GOOGLE_MAPS_API_KEY}>
         <GoogleMap
           mapContainerStyle={mapContainerStyle}
           center={center}

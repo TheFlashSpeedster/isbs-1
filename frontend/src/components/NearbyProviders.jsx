@@ -17,7 +17,6 @@ export default function NearbyProviders({ serviceType, userLocation, selectedPro
       setError("");
       
       try {
-        console.log("Fetching nearby providers for:", { serviceType, userLocation });
         const response = await api.post("/nearby-providers", {
           serviceType,
           userLocation: {
@@ -26,12 +25,10 @@ export default function NearbyProviders({ serviceType, userLocation, selectedPro
           }
         });
         
-        console.log("Nearby providers response:", response.data);
         const fetchedProviders = response.data.providers || [];
         setProviders(fetchedProviders);
         onProvidersLoad?.(fetchedProviders);
       } catch (err) {
-        console.error("Nearby providers error:", err);
         setError(err.response?.data?.message || "Failed to load nearby providers");
         setProviders([]);
         onProvidersLoad?.([]);

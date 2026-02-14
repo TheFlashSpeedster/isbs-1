@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import Navbar from "../components/Navbar.jsx";
 import api from "../utils/api.js";
+import { services } from "../utils/services.js";
 
 export default function AuthPage({ mode }) {
   const navigate = useNavigate();
@@ -14,7 +15,7 @@ export default function AuthPage({ mode }) {
     phone: "",
     password: "",
     role: "CUSTOMER",
-    serviceType: "Cooking",
+    serviceType: services[0]?.name || "Cleaning",
     latitude: "28.6139",
     longitude: "77.209"
   });
@@ -126,10 +127,9 @@ export default function AuthPage({ mode }) {
                   onChange={handleChange}
                   className="w-full rounded-lg border border-gray-300 bg-white px-4 py-3 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                 >
-                  <option value="Cooking">Cooking</option>
-                  <option value="Electrician">Electrician</option>
-                  <option value="Plumber">Plumber</option>
-                  <option value="Misc">Misc</option>
+                  {services.map((service) => (
+                    <option key={service.id} value={service.name}>{service.name}</option>
+                  ))}
                 </select>
                 <div className="grid gap-3 md:grid-cols-2">
                   <input

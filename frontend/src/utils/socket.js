@@ -1,6 +1,8 @@
 let socket = null;
 let loader = null;
 
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:4000";
+
 function loadSocketClient() {
   if (window.io) {
     return Promise.resolve(window.io);
@@ -12,7 +14,7 @@ function loadSocketClient() {
 
   loader = new Promise((resolve, reject) => {
     const script = document.createElement("script");
-    script.src = "http://localhost:4000/socket.io/socket.io.js";
+    script.src = `${API_BASE_URL}/socket.io/socket.io.js`;
     script.async = true;
 
     script.onload = () => resolve(window.io);
@@ -40,7 +42,7 @@ export async function getSocket() {
     socket = null;
   }
 
-  socket = io("http://localhost:4000", {
+  socket = io(API_BASE_URL, {
     auth: { token },
     transports: ["websocket"],
     withCredentials: false

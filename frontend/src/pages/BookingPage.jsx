@@ -16,6 +16,8 @@ export default function BookingPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const token = localStorage.getItem("token");
+  const user = JSON.parse(localStorage.getItem("user") || "null");
+  const role = user?.role || "CUSTOMER";
   const [showMap, setShowMap] = useState(false);
   const [providers, setProviders] = useState([]);
   const [selectedProvider, setSelectedProvider] = useState(null);
@@ -45,6 +47,26 @@ export default function BookingPage() {
 
   if (!token) {
     return null;
+  }
+
+  if (role !== "CUSTOMER") {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <Navbar />
+        <div className="mx-auto max-w-4xl px-4 py-16 text-center">
+          <h2 className="text-2xl font-bold text-gray-900">Booking is for customers only</h2>
+          <p className="mt-3 text-sm text-gray-600">
+            Providers and admins cannot create service bookings. Please use your dashboard tools.
+          </p>
+          <button
+            onClick={() => navigate("/dashboard")}
+            className="mt-6 rounded-lg bg-purple-600 px-4 py-2 text-sm font-semibold text-white hover:bg-purple-700"
+          >
+            Go to Dashboard
+          </button>
+        </div>
+      </div>
+    );
   }
 
   const handleChange = (event) => {
